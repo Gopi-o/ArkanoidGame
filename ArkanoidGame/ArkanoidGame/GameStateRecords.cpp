@@ -19,7 +19,7 @@ namespace ArkanoidGame
 
 		tableTexts.reserve(MAX_RECORDS_TABLE_SIZE);
 
-		Game& game = Application::Instance().GetGame();
+		const Game& game = Application::Instance().GetGame();
 		std::map<int, std::string> sortedRecordsTable;
 		for (const auto& item : game.GetRecordsTable())
 		{
@@ -53,13 +53,14 @@ namespace ArkanoidGame
 		{
 			if (event.key.code == sf::Keyboard::Escape)
 			{
-				Application::Instance().GetGame().PopGameState();
+				Application::Instance().GetGame().PopState();
 			}
 		}
 	}
 
 	void GameStateRecordsData::Update(float timeDelta)
 	{
+
 	}
 
 	void GameStateRecordsData::Draw(sf::RenderWindow& window)
@@ -85,4 +86,5 @@ namespace ArkanoidGame
 		hintText.setPosition(viewSize.x / 2.f, viewSize.y - 50.f);
 		window.draw(hintText);
 	}
+
 }

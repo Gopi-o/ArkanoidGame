@@ -1,79 +1,67 @@
 #include "Ball.h"
-#include <assert.h>
 #include "GameSettings.h"
 #include "Sprite.h"
+#include <assert.h>
+#include "randomizer.h"
+
+namespace
+{
+	// id textures
+	const std::string TEXTURE_ID = "ball";
+}
 
 namespace ArkanoidGame
 {
-	Ball::Ball()
+	Ball::Ball(const sf::Vector2f& position)
+		: GameObject(TEXTURES_PATH + TEXTURE_ID + ".png", position, BALL_SIZE, BALL_SIZE)
 	{
-		shape.setRadius(BALL_RADIUS);
-		shape.setFillColor(sf::Color::Cyan);
-		shape.setPosition(SCREEN_WIDTH / 2.f, SCREEN_HEGHT / 2.f);
-		velocity = { BALL_SPEED, -BALL_SPEED };
-
+		const float angle = 90;
+		const auto pi = std::acos(-1.f);
+		direction.x = std::cos(pi / 180.f * angle);
+		direction.y = std::sin(pi / 180.f * angle);
 	}
-	void Ball::Update(float deltaTime, const Platform& platform)
+
+	void Ball::Update(float timeDelta)
 	{
-		shape.move(velocity * deltaTime);
+		const auto pos = sprite.getPosition() + BALL_SPEED * timeDelta * direction;
+		sprite.setPosition(pos);
 
-		sf::FloatRect ballBounds = shape.getGlobalBounds();
-		sf::FloatRect platformBounds = platform.GetSprite().getGlobalBounds();
-
-		if (shape.getPosition().x <= 0 || shape.getPosition().x + 2 * BALL_RADIUS >= SCREEN_WIDTH)
-		{
-			velocity.x = -velocity.y;
-		}
-		if (shape.getPosition().y <= 0)
-		{
-			velocity.y = -velocity.y;
+		if (pos.x - BALL_SIZE / 2.f <= 0 || pos.x + BALL_SIZE / 2.f >= SCREEN_WIDTH) {
+			direction.x *= -1;
 		}
 
-		//Check screen border 
-		if (ballBounds.left <= 0.f) { // Left wall
-			velocity.x = std::abs(velocity.x);
-			shape.setPosition(0.f, ballBounds.top);
+		if (pos.y - BALL_SIZE / 2.f <= 0 || pos.y + BALL_SIZE / 2.f >= SCREEN_HEIGHT) {
+			direction.y *= -1;
 		}
-		else if (ballBounds.left + ballBounds.width >= SCREEN_WIDTH) { // Right Wall
-			velocity.x = -std::abs(velocity.x);
-			shape.setPosition(SCREEN_WIDTH - (ballBounds.width), ballBounds.top);
-		}
-		if (ballBounds.top <= 0.f) { // Top Wall
-			velocity.y = std::abs(velocity.y);
-			shape.setPosition(ballBounds.left, 0.f);
-		}
-
-		//Check With platform intersection
-		if (ballBounds.intersects(platformBounds)) {
-			sf::Vector2f platformVelocity = platform.GetVelocity();
-
-			shape.setPosition(ballBounds.left, platform.GetSprite().getPosition().y - ballBounds.height);
-
-			// Change direction of the ball
-			velocity.y = -std::abs(velocity.y); // rebound
-
-			// Application speed of the platform
-			velocity.x += platformVelocity.x * 1.f; // Reducing the reflection angle
-
-			// Limit MaxSpeed
-			float maxSpeed = 600.0f; // Max Speed
-			float speed = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-			if (speed > maxSpeed) {
-				float ratio = maxSpeed / speed;
-				velocity.x *= ratio;
-				velocity.y *= ratio;
-			}
-		}
-
-		//// Checking down outside the window
-		//if (ballBounds.top + ballBounds.height >= SCREEN_HEGHT) {
-
-		//	shape.setPosition(SCREEN_WIDTH / 2.f, SCREEN_HEGHT / 2.f); 
-		//	velocity = { BALL_SPEED, BALL_SPEED }; // Reset velocity vector
-		//}
 	}
-	void Ball::Draw(sf::RenderWindow& window)
+
+	void Ball::InvertDirectionX()
 	{
-		window.draw(shape);
+		direction.x *= -1;
+	}
+
+	void Ball::InvertDirectionY()
+	{
+		direction.y *= -1;
+	}
+
+	bool Ball::GetCollision(std::shared_ptr<IColladiable> collidable) const {
+		auto gameObject = std::dynamic_pointer_cast<GameObject>(collidable);
+		assert(gameObject);
+		return GetRect().intersects(gameObject->GetRect());
+	}
+
+	void Ball::OnHit()
+	{
+		lastAngle += random<float>(-5, 5);
+		ChangeAngle(lastAngle);
+	}
+
+	void Ball::ChangeAngle(float angle)
+	{
+		lastAngle = angle;
+		const auto pi = std::acos(-1.f);
+		direction.x = (angle / abs(angle)) * std::cos(pi / 180.f * angle);
+		direction.y = -1 * abs(std::sin(pi / 180.f * angle));
 	}
 }

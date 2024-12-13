@@ -1,5 +1,6 @@
 #include "GameStatePlaying.h"
 #include "Application.h"
+#include "Block.h"
 #include "Game.h"
 #include "Text.h"
 #include <assert.h>
@@ -8,15 +9,15 @@
 namespace ArkanoidGame
 {
 	void GameStatePlayingData::Init()
-	{
+	{	
 		// Init game resources (terminate if error)
 		assert(font.loadFromFile(FONTS_PATH + "Roboto-Regular.ttf"));
 		assert(gameOverSoundBuffer.loadFromFile(SOUNDS_PATH + "Death.wav"));
 
 		// Init background
-		background.setSize(sf::Vector2f(SCREEN_WIDTH, SCREEN_HEGHT));
+		background.setSize(sf::Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT));
 		background.setPosition(0.f, 0.f);
-		background.setFillColor(sf::Color(0, 200, 0));
+		background.setFillColor(sf::Color(51, 21, 61));
 
 		scoreText.setFont(font);
 		scoreText.setCharacterSize(24);
@@ -28,6 +29,10 @@ namespace ArkanoidGame
 		inputHintText.setString("Use arrow keys to move, ESC to pause");
 		inputHintText.setOrigin(GetTextOrigin(inputHintText, { 1.f, 0.f }));
 
+		gameObjects.emplace_back(std::make_shared<Platform>(sf::Vector2f({ SCREEN_WIDTH / 2.0, SCREEN_HEIGHT - 120.f })));
+		gameObjects.emplace_back(std::make_shared<Ball>(sf::Vector2f({ SCREEN_WIDTH / 2.f, SCREEN_HEIGHT - PLATFORM_HEIGHT - 120.f } )));
+		createBlocks();
+
 		// Init sounds
 		gameOverSound.setBuffer(gameOverSoundBuffer);
 	}
@@ -38,46 +43,62 @@ namespace ArkanoidGame
 		{
 			if (event.key.code == sf::Keyboard::Escape)
 			{
-				Application::Instance().GetGame().PushGameState(GameStateType::ExitDialog, false);
+				Application::Instance().GetGame().PushState(GameStateType::ExitDialog, false);
 			}
 		}
 	}
 
 	void GameStatePlayingData::Update(float timeDelta)
 	{
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-		{
-			platform.SetDirection(PlatformDirection::Right);
+		static auto updateFunctor = [timeDelta](auto obj) { obj->Update(timeDelta); };
+
+		std::for_each(gameObjects.begin(), gameObjects.end(), updateFunctor);
+		std::for_each(blocks.begin(), blocks.end(), updateFunctor);
+
+
+		std::shared_ptr <Platform> platform = std::dynamic_pointer_cast<Platform>(gameObjects[0]);
+		std::shared_ptr<Ball> ball = std::dynamic_pointer_cast<Ball>(gameObjects[1]);
+
+		auto isCollision = platform->CheckCollision(ball);
+
+		bool needInverseDirX = false;
+		bool needInverseDirY = false;
+
+
+		bool hasBrokeOneBlock = false;
+		//remove-erase idiom
+		blocks.erase(
+			std::remove_if(blocks.begin(), blocks.end(),
+				[ball, &hasBrokeOneBlock, &needInverseDirX, &needInverseDirY, this](auto block) {
+					if ((!hasBrokeOneBlock) && block->CheckCollision(ball)) {
+						hasBrokeOneBlock = true;
+						const auto ballPos = ball->GetPosition();
+						const auto blockRect = block->GetRect();
+
+						GetBallInverse(ballPos, blockRect, needInverseDirX, needInverseDirY);
+					}
+					return block->IsBroken();
+				}),
+			blocks.end()
+					);
+		if (needInverseDirX) {
+			ball->InvertDirectionX();
 		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-		{
-			platform.SetDirection(PlatformDirection::Left);
+		if (needInverseDirY) {
+			ball->InvertDirectionY();
 		}
 
-		// Update Platform
-		platform.MovePlatform(timeDelta);
-		ball.Update(timeDelta, platform);
-
+		const bool isGameWin = blocks.size() == 0;
+		const bool isGameOver = !isCollision && ball->GetPosition().y > platform->GetRect().top + 110.f;
 		Game& game = Application::Instance().GetGame();
 
-		const bool isGameFinished = numEatenApples == MAX_APPLES && !Application::Instance().GetGame().IsEnableOptions(GameOptions::InfiniteApples);
-		
-		if (isGameFinished
-			//|| !HasSnakeCollisionWithRect(snake.body, background.getGlobalBounds()) 
-			|| !platform.HasCollisionWithRect(background.getGlobalBounds())  // Check collision with screen border
-			|| ball.HasCollisionWithBottom(background.getGlobalBounds().top + background.getGlobalBounds().height))
-
-		{
-			gameOverSound.play();
-
-			Game& game = Application::Instance().GetGame();
-
-			// Find snake in records table and update his score
-			game.UpdateRecord(PLAYER_NAME, numEatenApples);
-			Application::Instance().GetGame().PushGameState(GameStateType::GameOver, false);
+		if (isGameWin) {
+			game.PushState(GameStateType::GameWin, false);
 		}
-
-		scoreText.setString("Apples eaten: " + std::to_string(numEatenApples));
+		else if (isGameOver) {
+			gameOverSound.play();
+			game.PushState(GameStateType::GameOver, false);
+		}
 	}
 
 	void GameStatePlayingData::Draw(sf::RenderWindow& window)
@@ -85,11 +106,10 @@ namespace ArkanoidGame
 		// Draw background
 		window.draw(background);
 
-		// Draw snake DrawSnake(snake, window);
-		// Draw Platform
-		platform.DrawPlatform(window);
-		// Draw Ball
-		ball.Draw(window);
+		static auto drawFunc = [&window](auto block) { block->Draw(window); };
+		// Draw game objects
+		std::for_each(gameObjects.begin(), gameObjects.end(), drawFunc);
+		std::for_each(blocks.begin(), blocks.end(), drawFunc);
 
 		scoreText.setOrigin(GetTextOrigin(scoreText, { 0.f, 0.f }));
 		scoreText.setPosition(10.f, 10.f);
@@ -98,5 +118,30 @@ namespace ArkanoidGame
 		sf::Vector2f viewSize = window.getView().getSize();
 		inputHintText.setPosition(viewSize.x - 10.f, 10.f);
 		window.draw(inputHintText);
+	}
+
+	void GameStatePlayingData::createBlocks() 
+	{
+		for (int row = 0; row < BLOCKS_COUNT_ROWS; ++row) {
+			for (int col = 0; col < BLOCKS_COUNT_IN_ROW; ++col) {
+				blocks.emplace_back(std::make_shared<Block>(sf::Vector2f({ BLOCK_SHIFT + BLOCK_WIDTH / 2.f + col * (BLOCK_WIDTH + BLOCK_SHIFT), 45.f + row * BLOCK_HEIGHT })));
+			}
+		}
+	}
+
+	void GameStatePlayingData::GetBallInverse(const sf::Vector2f& ballPos, const sf::FloatRect& blockRect, bool& needInverseDirX, bool& needInverseDirY) {
+
+		if (ballPos.y > blockRect.top + blockRect.height)
+		{
+			needInverseDirY = true;
+		}
+		if (ballPos.x < blockRect.left)
+		{
+			needInverseDirX = true;
+		}
+		if (ballPos.x > blockRect.left + blockRect.width)
+		{
+			needInverseDirX = true;
+		}
 	}
 }

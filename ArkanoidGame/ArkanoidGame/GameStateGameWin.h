@@ -1,13 +1,12 @@
 #pragma once
 #include "SFML/Graphics.hpp"
 #include "GameStateData.h"
-#include "Menu.h"
 
 namespace ArkanoidGame
 {
 	class Game;
 
-	class GameStateMainMenuData : public GameStateData
+	class GameStateGameWinData : public GameStateData
 	{
 	public:
 		void Init() override;
@@ -16,7 +15,14 @@ namespace ArkanoidGame
 		void Draw(sf::RenderWindow& window) override;
 
 	private:
+		// Resources
 		sf::Font font;
-		Menu menu;
+
+		float timeSinceGameWin = 0.f;
+
+		// UI data
+		sf::RectangleShape background;
+		sf::Text gameWinText;
+		sf::Text hintText;
 	};
 }

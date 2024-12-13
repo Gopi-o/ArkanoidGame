@@ -1,7 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 
-#include "Snake.h"
 #include "Sprite.h"
 #include "GameSettings.h"
 #include "GameState.h"
@@ -35,39 +34,34 @@ namespace ArkanoidGame
 		~Game();
 
 		void HandleWindowEvents(sf::RenderWindow& window);
-		bool UpdateGame(float timeDelta); // Return false if game should be closed
-		void DrawGame(sf::RenderWindow& window);
-		void ShutdownGame();
+		bool Update(float timeDelta); // Return false if game should be closed
+		void Draw(sf::RenderWindow& window);
+		void Shutdown();
 
-		bool IsEnableOptions(GameOptions option);
+		bool IsEnableOptions(GameOptions option) const;
 		void SetOption(GameOptions option, bool value);
 
 		const RecordsTable& GetRecordsTable() const { return recordsTable; }
-		int GetRecordsByPlayerId(const std::string& playerId) const;
+		int GetRecordByPlayerId(const std::string& playerId) const;
 		void UpdateRecord(const std::string& playerId, int score);
 
-
 		// Add new game state on top of the stack
-		void PushGameState(GameStateType stateType, bool isExclusivelyVisible);
+		void PushState(GameStateType stateType, bool isExclusivelyVisible);
 
 		// Remove current game state from the stack
-		void PopGameState();
+		void PopState();
 
 		// Remove all game states from the stack and add new one
-		void SwitchGameState(GameStateType newState);
+		void SwitchStateTo(GameStateType newState);
 
-
-
-
+		
 	private:
-		std::vector<GameState> gameStateStack;
-		GameStateChangeType gameStateChangeType = GameStateChangeType::None;
+		std::vector<GameState> stateStack;
+		GameStateChangeType stateChangeType = GameStateChangeType::None;
 		GameStateType pendingGameStateType = GameStateType::None;
 		bool pendingGameStateIsExclusivelyVisible = false;
 
 		GameOptions options = GameOptions::Default;
 		RecordsTable recordsTable;
 	};
-
-
 }

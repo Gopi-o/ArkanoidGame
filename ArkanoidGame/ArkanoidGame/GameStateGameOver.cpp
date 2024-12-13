@@ -34,7 +34,7 @@ namespace ArkanoidGame
 			sortedRecordsTable.insert(std::make_pair(item.second, item.first));
 		}
 
-		bool isSnakeInTable = false;
+		bool isPlayerInTable = false;
 		auto it = sortedRecordsTable.rbegin();
 		for (int i = 0; i < MAX_RECORDS_TABLE_SIZE && it != sortedRecordsTable.rend(); ++i, ++it) // Note, we can do several actions in for action block
 		{
@@ -50,7 +50,7 @@ namespace ArkanoidGame
 			if (it->second == PLAYER_NAME)
 			{
 				text.setFillColor(sf::Color::Green);
-				isSnakeInTable = true;
+				isPlayerInTable = true;
 			}
 			else
 			{
@@ -58,13 +58,13 @@ namespace ArkanoidGame
 			}
 		}
 
-		// If snake is not in table, replace last element with him
-		if (!isSnakeInTable)
+		// If player is not in table, replace last element with him
+		if (!isPlayerInTable)
 		{
 			sf::Text& text = recordsTableTexts.back();
 			std::stringstream sstream;
-			int snakeScores = game.GetRecordsByPlayerId(PLAYER_NAME);
-			sstream << MAX_RECORDS_TABLE_SIZE << ". " << PLAYER_NAME << ": " << snakeScores;
+			int playerScores = game.GetRecordByPlayerId(PLAYER_NAME);
+			sstream << MAX_RECORDS_TABLE_SIZE << ". " << PLAYER_NAME << ": " << playerScores;
 			text.setString(sstream.str());
 			text.setFillColor(sf::Color::Green);
 		}
@@ -81,11 +81,11 @@ namespace ArkanoidGame
 		{
 			if (event.key.code == sf::Keyboard::Space)
 			{
-				Application::Instance().GetGame().SwitchGameState(GameStateType::Playing);
+				Application::Instance().GetGame().SwitchStateTo(GameStateType::Playing);
 			}
 			else if (event.key.code == sf::Keyboard::Escape)
 			{
-				Application::Instance().GetGame().SwitchGameState(GameStateType::MainMenu);
+				Application::Instance().GetGame().SwitchStateTo(GameStateType::MainMenu);
 			}
 		}
 	}
@@ -96,6 +96,7 @@ namespace ArkanoidGame
 
 		sf::Color gameOverTextColor = (int)timeSinceGameOver % 2 ? sf::Color::Red : sf::Color::Yellow;
 		gameOverText.setFillColor(gameOverTextColor);
+
 	}
 
 	void GameStateGameOverData::Draw(sf::RenderWindow& window)
@@ -124,8 +125,5 @@ namespace ArkanoidGame
 		hintText.setOrigin(GetTextOrigin(hintText, { 0.5f, 1.f }));
 		hintText.setPosition(viewSize.x / 2.f, viewSize.y - 50.f);
 		window.draw(hintText);
-
 	}
-
-
 }

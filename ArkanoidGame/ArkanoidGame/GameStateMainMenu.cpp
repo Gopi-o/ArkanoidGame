@@ -14,7 +14,7 @@ namespace ArkanoidGame
 		startGame.text.setFont(font);
 		startGame.text.setCharacterSize(24);
 		startGame.onPressCallback = [](MenuItem&) {
-			Application::Instance().GetGame().SwitchGameState(GameStateType::Playing);
+			Application::Instance().GetGame().SwitchStateTo(GameStateType::Playing);
 			};
 		
 		const bool isInfiniteApples = Application::Instance().GetGame().IsEnableOptions(GameOptions::InfiniteApples);
@@ -60,7 +60,7 @@ namespace ArkanoidGame
 		recordsItem.text.setFont(font);
 		recordsItem.text.setCharacterSize(24);
 		recordsItem.onPressCallback = [](MenuItem&) {
-			Application::Instance().GetGame().PushGameState(GameStateType::Records, true);
+			Application::Instance().GetGame().PushState(GameStateType::Records, true);
 			};
 
 		MenuItem yesItem;
@@ -68,7 +68,7 @@ namespace ArkanoidGame
 		yesItem.text.setFont(font);
 		yesItem.text.setCharacterSize(24);
 		yesItem.onPressCallback = [](MenuItem&) {
-			Application::Instance().GetGame().SwitchGameState(GameStateType::None);
+			Application::Instance().GetGame().SwitchStateTo(GameStateType::None);
 			};
 
 		MenuItem noItem;
@@ -112,7 +112,6 @@ namespace ArkanoidGame
 
 	void GameStateMainMenuData::HandleWindowEvent(const sf::Event& event)
 	{
-		Game& game = Application::Instance().GetGame();
 		if (event.type == sf::Event::KeyPressed)
 		{
 			if (event.key.code == sf::Keyboard::Escape)
@@ -140,6 +139,7 @@ namespace ArkanoidGame
 
 	void GameStateMainMenuData::Update(float timeDelta)
 	{
+
 	}
 
 	void GameStateMainMenuData::Draw(sf::RenderWindow& window)

@@ -9,6 +9,7 @@
 
 namespace ArkanoidGame
 {
+
 	Game::Game()
 	{
 		// Generate fake records table
@@ -21,16 +22,15 @@ namespace ArkanoidGame
 			{"Clementine", MAX_APPLES / 5 },
 		};
 
-		gameStateChangeType = GameStateChangeType::None;
+		stateChangeType = GameStateChangeType::None;
 		pendingGameStateType = GameStateType::None;
 		pendingGameStateIsExclusivelyVisible = false;
-		SwitchGameState(GameStateType::MainMenu);
-
+		SwitchStateTo(GameStateType::MainMenu);
 	}
 
 	Game::~Game()
 	{
-		ShutdownGame();
+		Shutdown();
 	}
 
 	void Game::HandleWindowEvents(sf::RenderWindow& window)
@@ -44,60 +44,60 @@ namespace ArkanoidGame
 				window.close();
 			}
 
-			if (gameStateStack.size() > 0)
+			if (stateStack.size() > 0)
 			{
-				gameStateStack.back().HandleWindowEvent(event);
+				stateStack.back().HandleWindowEvent(event);
 			}
 		}
 	}
 
-	bool Game::UpdateGame(float timeDelta)
+	bool Game::Update(float timeDelta)
 	{
-		if (gameStateChangeType == GameStateChangeType::Switch)
+		if (stateChangeType == GameStateChangeType::Switch)
 		{
 			// Shutdown all game states
-			while (gameStateStack.size() > 0)
+			while (stateStack.size() > 0)
 			{
-				gameStateStack.pop_back();
+				stateStack.pop_back();
 			}
 		}
-		else if (gameStateChangeType == GameStateChangeType::Pop)
+		else if (stateChangeType == GameStateChangeType::Pop)
 		{
 			// Shutdown only current game state
-			if (gameStateStack.size() > 0)
+			if (stateStack.size() > 0)
 			{
-				gameStateStack.pop_back();
+				stateStack.pop_back();
 			}
 		}
 
 		// Initialize new game state if needed
 		if (pendingGameStateType != GameStateType::None)
 		{
-			gameStateStack.push_back(GameState(pendingGameStateType, pendingGameStateIsExclusivelyVisible));
+			stateStack.push_back(GameState(pendingGameStateType, pendingGameStateIsExclusivelyVisible));
 		}
 
-		gameStateChangeType = GameStateChangeType::None;
+		stateChangeType = GameStateChangeType::None;
 		pendingGameStateType = GameStateType::None;
 		pendingGameStateIsExclusivelyVisible = false;
 
-		if (gameStateStack.size() > 0)
+		if (stateStack.size() > 0)
 		{
-			gameStateStack.back().Update(timeDelta);
+			stateStack.back().Update(timeDelta);
 			return true;
 		}
 
 		return false;
 	}
 
-	void Game::DrawGame(sf::RenderWindow& window)
+	void Game::Draw(sf::RenderWindow& window)
 	{
-		if (gameStateStack.size() > 0)
+		if (stateStack.size() > 0)
 		{
 			std::vector<GameState*> visibleGameStates;
-			for (auto it = gameStateStack.rbegin(); it != gameStateStack.rend(); ++it)
+			for (auto it = stateStack.rbegin(); it != stateStack.rend(); ++it)
 			{
 				visibleGameStates.push_back(&(*it));
-				if (it->bIsExclusivelyVisible())
+				if (it->IsExclusivelyVisible())
 				{
 					break;
 				}
@@ -110,55 +110,57 @@ namespace ArkanoidGame
 		}
 	}
 
-	void Game::ShutdownGame()
+	void Game::Shutdown()
 	{
 		// Shutdown all game states
-		while (gameStateStack.size() > 0)
+		while (stateStack.size() > 0)
 		{
-			gameStateStack.pop_back();
+			stateStack.pop_back();
 		}
 
-		gameStateChangeType = GameStateChangeType::None;
+		stateChangeType = GameStateChangeType::None;
 		pendingGameStateType = GameStateType::None;
 		pendingGameStateIsExclusivelyVisible = false;
 	}
 
-	void Game::PushGameState(GameStateType stateType, bool isExclusivelyVisible)
+	void Game::PushState(GameStateType stateType, bool isExclusivelyVisible)
 	{
 		pendingGameStateType = stateType;
 		pendingGameStateIsExclusivelyVisible = isExclusivelyVisible;
-		gameStateChangeType = GameStateChangeType::Push;
+		stateChangeType = GameStateChangeType::Push;
 	}
 
-	void Game::PopGameState()
+	void Game::PopState()
 	{
 		pendingGameStateType = GameStateType::None;
 		pendingGameStateIsExclusivelyVisible = false;
-		gameStateChangeType = GameStateChangeType::Pop;
+		stateChangeType = GameStateChangeType::Pop;
 	}
 
-	void Game::SwitchGameState(GameStateType newState)
+	void Game::SwitchStateTo(GameStateType newState)
 	{
 		pendingGameStateType = newState;
 		pendingGameStateIsExclusivelyVisible = false;
-		gameStateChangeType = GameStateChangeType::Switch;
+		stateChangeType = GameStateChangeType::Switch;
+	}
+
+	bool Game::IsEnableOptions(GameOptions option) const
+	{
+		const bool isEnable = ((std::uint8_t)options & (std::uint8_t)option) != (std::uint8_t)GameOptions::Empty;
+		return isEnable;
 	}
 
 	void Game::SetOption(GameOptions option, bool value)
 	{
-
-		if (value)
-		{
+		if (value) {
 			options = (GameOptions)((std::uint8_t)options | (std::uint8_t)option);
 		}
-		else
-		{
+		else {
 			options = (GameOptions)((std::uint8_t)options & ~(std::uint8_t)option);
 		}
-
 	}
 
-	int Game::GetRecordsByPlayerId(const std::string& playerId) const
+	int Game::GetRecordByPlayerId(const std::string& playerId) const
 	{
 		auto it = recordsTable.find(playerId);
 		return it == recordsTable.end() ? 0 : it->second;
@@ -167,12 +169,5 @@ namespace ArkanoidGame
 	void Game::UpdateRecord(const std::string& playerId, int score)
 	{
 		recordsTable[playerId] = std::max(recordsTable[playerId], score);
-	}
-
-
-	bool Game::IsEnableOptions(GameOptions option)
-	{
-		bool isEnable = ((std::uint8_t)options & (std::uint8_t)option) != (std::uint8_t)GameOptions::Empty;
-		return isEnable;
 	}
 }

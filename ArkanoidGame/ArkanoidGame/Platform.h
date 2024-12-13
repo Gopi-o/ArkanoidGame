@@ -1,44 +1,20 @@
 #pragma once
-#include <SFML/Graphics.hpp>
-#include "GameSettings.h"
+#include "SFML/Graphics.hpp"
+#include "GameObject.h"
+#include "ICollidable.h"
 
 namespace ArkanoidGame
 {
-	enum class PlatformDirection
-	{
-		Stop = 0,
-		Right,
-		Left,
-	};
-
-	class Platform
+	class Platform : public GameObject, public IColladiable
 	{
 	public:
-		Platform();
-
-
-		void MovePlatform(float deltaTime);
-		void DrawPlatform(sf::RenderWindow& window);
-		bool HasCollisionWithRect(const sf::FloatRect& rect) const {
-			return sprite.getGlobalBounds().intersects(rect);
-		}
-
-		void SetDirection(PlatformDirection direction);
-		const sf::Vector2f& GetVelocity() const {
-			return sf::Vector2f((direction == PlatformDirection::Left ? -INITIAL_SPEED : (direction == PlatformDirection::Right ? INITIAL_SPEED : 0)), 0);
-		}
-		const sf::Sprite& GetSprite() const {
-			return sprite; 
-		}
-
-
+		Platform(const sf::Vector2f& position);
+		void Update(float timeDelta) override;
+		
+		bool GetCollision(std::shared_ptr<IColladiable> collidable) const override;
+		void OnHit() override {}
+		bool CheckCollision(std::shared_ptr<IColladiable> collidable) override;
 	private:
-		sf::Sprite sprite;
-		sf::Texture texture;
-		PlatformDirection direction = PlatformDirection::Right;
-		float SpeedX = 0.f;
-		sf::Vector2f velocity;
+		void Move(float speed);
 	};
 }
-
-

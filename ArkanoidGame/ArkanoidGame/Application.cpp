@@ -10,16 +10,12 @@ namespace ArkanoidGame
 	}
 
 	Application::Application() :
-		window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEGHT), GAME_NAME)
+		window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), GAME_NAME)
 	{
 		// Init random number generator
 		unsigned int seed = (unsigned int)time(nullptr); // Get current time as seed. You can also use any other number to fix randomization
 		srand(seed);
-		
-
 	}
-
-
 
 	void Application::Run()
 	{
@@ -37,13 +33,13 @@ namespace ArkanoidGame
 				break;
 			}
 
-			if (game.UpdateGame(TIME_PER_FRAME))
+			if (game.Update(TIME_PER_FRAME))
 			{
 				// Draw everything here
 				// Clear the window first
 				window.clear();
 
-				game.DrawGame(window);
+				game.Draw(window);
 
 				// End the current frame, display window contents on screen
 				window.display();

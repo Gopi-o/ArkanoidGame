@@ -5,7 +5,6 @@
 
 namespace ArkanoidGame
 {
-
 	void GameStatePauseMenuData::Init()
 	{
 		assert(font.loadFromFile(RESOURCES_PATH + "Fonts/Roboto-Regular.ttf"));
@@ -22,7 +21,7 @@ namespace ArkanoidGame
 		resumeItem.text.setFont(font);
 		resumeItem.text.setCharacterSize(24);
 		resumeItem.onPressCallback = [](MenuItem&) {
-			Application::Instance().GetGame().PopGameState();;
+			Application::Instance().GetGame().PopState();
 			};
 
 		MenuItem exitItem;
@@ -30,7 +29,7 @@ namespace ArkanoidGame
 		exitItem.text.setFont(font);
 		exitItem.text.setCharacterSize(24);
 		exitItem.onPressCallback = [](MenuItem&) {
-			Application::Instance().GetGame().SwitchGameState(GameStateType::MainMenu);
+			Application::Instance().GetGame().SwitchStateTo(GameStateType::MainMenu);
 			};
 
 		MenuItem pauseMenu;
@@ -40,7 +39,6 @@ namespace ArkanoidGame
 		pauseMenu.childrens.push_back(exitItem);
 
 		menu.Init(pauseMenu);
-
 	}
 
 	void GameStatePauseMenuData::HandleWindowEvent(const sf::Event& event)
@@ -49,7 +47,7 @@ namespace ArkanoidGame
 		{
 			if (event.key.code == sf::Keyboard::Escape)
 			{
-				Application::Instance().GetGame().PopGameState();
+				Application::Instance().GetGame().PopState();
 			}
 
 			if (event.key.code == sf::Keyboard::Enter)
@@ -71,6 +69,7 @@ namespace ArkanoidGame
 
 	void GameStatePauseMenuData::Update(float timeDelta)
 	{
+
 	}
 
 	void GameStatePauseMenuData::Draw(sf::RenderWindow& window)
@@ -86,6 +85,5 @@ namespace ArkanoidGame
 
 		menu.Draw(window, window.getView().getCenter(), { 0.5f, 0.f });
 	}
-
 
 }
