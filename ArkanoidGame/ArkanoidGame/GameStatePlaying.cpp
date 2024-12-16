@@ -71,11 +71,17 @@ namespace ArkanoidGame
 			std::remove_if(blocks.begin(), blocks.end(),
 				[ball, &hasBrokeOneBlock, &needInverseDirX, &needInverseDirY, this](auto block) {
 					if ((!hasBrokeOneBlock) && block->CheckCollision(ball)) {
-						hasBrokeOneBlock = true;
-						const auto ballPos = ball->GetPosition();
-						const auto blockRect = block->GetRect();
+						if (dynamic_cast<GlassDestroyableBlock*>(block.get())) {
+							hasBrokeOneBlock = true;
+							return block->IsBroken();
+						}else{
+							hasBrokeOneBlock = true;
+							const auto ballPos = ball->GetPosition();
+							const auto blockRect = block->GetRect();
 
-						GetBallInverse(ballPos, blockRect, needInverseDirX, needInverseDirY);
+							GetBallInverse(ballPos, blockRect, needInverseDirX, needInverseDirY);
+
+						}
 					}
 					return block->IsBroken();
 				}),
@@ -121,10 +127,59 @@ namespace ArkanoidGame
 	}
 
 	void GameStatePlayingData::createBlocks() 
-	{
-		for (int row = 0; row < BLOCKS_COUNT_ROWS; ++row) {
+	{	
+		int row = 0;
+		for (; row < BLOCKS_COUNT_ROWS; ++row) {
 			for (int col = 0; col < BLOCKS_COUNT_IN_ROW; ++col) {
-				blocks.emplace_back(std::make_shared<Block>(sf::Vector2f({ BLOCK_SHIFT + BLOCK_WIDTH / 2.f + col * (BLOCK_WIDTH + BLOCK_SHIFT), 45.f + row * BLOCK_HEIGHT })));
+				blocks.emplace_back(std::make_shared<SmoothDestroyableBlock>(
+					sf::Vector2f({
+						BLOCK_SHIFT + BLOCK_WIDTH / 2.f + col * (BLOCK_WIDTH + BLOCK_SHIFT),
+						45.f + row * BLOCK_HEIGHT
+						}))
+				);
+			}
+		}
+
+		// “еперь добавл€ем UnBreakableBlock в дополнительных р€дах
+		for (row = 0; row < 1; ++row) { // ќдин р€д дл€ UnBreakableBlock
+			for (int col = 0; col < 3; col++) {
+				blocks.emplace_back(std::make_shared<UnBreakableBlock>(
+					sf::Vector2f({
+						BLOCK_SHIFT + BLOCK_WIDTH / 2.f + col * (BLOCK_WIDTH + BLOCK_SHIFT),
+						45.f + (row + BLOCKS_COUNT_ROWS) * BLOCK_HEIGHT // смещение на количество р€дов
+						}))
+				);
+			}
+			for (int col = 12; col < 15; col++) {
+				blocks.emplace_back(std::make_shared<UnBreakableBlock>(
+					sf::Vector2f({
+						BLOCK_SHIFT + BLOCK_WIDTH / 2.f + col * (BLOCK_WIDTH + BLOCK_SHIFT),
+						45.f + (row + BLOCKS_COUNT_ROWS) * BLOCK_HEIGHT // смещение на количество р€дов
+						}))
+				);
+			}
+		}
+
+		// ƒобавл€ем StrongDestroyableBlock в дополнительные р€ды
+		for (row = 1; row < 3; ++row) { // ƒва р€да дл€ StrongDestroyableBlock
+			for (int col = 0; col < 15; col++) {
+				blocks.emplace_back(std::make_shared<StrongDestroyableBlock>(
+					sf::Vector2f({
+						BLOCK_SHIFT + BLOCK_WIDTH / 2.f + col * (BLOCK_WIDTH + BLOCK_SHIFT),
+						45.f + (row + BLOCKS_COUNT_ROWS) * BLOCK_HEIGHT // смещение на количество р€дов
+						}))
+				);
+			}
+		}
+		
+		for (row = 5; row < 6; ++row) { 
+			for (int col = 0; col < 15; col++) {
+				blocks.emplace_back(std::make_shared<GlassDestroyableBlock>(
+					sf::Vector2f({
+						BLOCK_SHIFT + BLOCK_WIDTH / 2.f + col * (BLOCK_WIDTH + BLOCK_SHIFT),
+						45.f + (row + BLOCKS_COUNT_ROWS) * BLOCK_HEIGHT
+						}))
+				);
 			}
 		}
 	}
