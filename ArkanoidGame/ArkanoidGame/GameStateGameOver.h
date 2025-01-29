@@ -2,6 +2,7 @@
 #include "SFML/Graphics.hpp"
 #include "GameStateData.h"
 
+
 namespace ArkanoidGame
 {
 	class Game;
@@ -17,6 +18,7 @@ namespace ArkanoidGame
 	private:
 		// Resources
 		sf::Font font;
+
 
 		float timeSinceGameOver = 0.f;
 

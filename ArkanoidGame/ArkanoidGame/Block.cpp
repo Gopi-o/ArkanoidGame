@@ -13,12 +13,12 @@ namespace
 namespace ArkanoidGame
 {
 	Block::Block(const sf::Vector2f& position, const sf::Color& color)
-		: GameObject(TEXTURES_PATH + TEXTURE_ID + ".png", position, BLOCK_WIDTH, BLOCK_HEIGHT)
+		: GameObject(SETTINGS.TEXTURES_PATH + TEXTURE_ID + ".png", position, SETTINGS.BLOCK_WIDTH, SETTINGS.BLOCK_HEIGHT)
 	{
 		sprite.setColor(color);
 	}
 
-	bool Block::GetCollision(std::shared_ptr<IColladiable> collidableObject) const {
+	bool Block::GetCollision(std::shared_ptr<Colladiable> collidableObject) const {
 		auto gameObject = std::dynamic_pointer_cast<GameObject>(collidableObject);
 		assert(gameObject);
 		sf::Rect rect = gameObject->GetRect();
@@ -29,7 +29,7 @@ namespace ArkanoidGame
 	void Block::OnHit()
 	{
 		hitCount = 0;
-
+		Emit();
 	}
 
 	bool Block::IsBroken()
@@ -61,11 +61,11 @@ namespace ArkanoidGame
 		UpdateTimer(timeDelta);
 	}
 
-	bool SmoothDestroyableBlock::GetCollision(std::shared_ptr<IColladiable> collidableObject) const
+	bool SmoothDestroyableBlock::GetCollision(std::shared_ptr<Colladiable> collidableObject) const
 	{
-		if (isTimerStarted)
+		if (isTimerStarted_)
 		{
-		return false;
+			return false;
 		}
 
 		auto gameObject = std::dynamic_pointer_cast<GameObject>(collidableObject);
@@ -78,12 +78,13 @@ namespace ArkanoidGame
 
 	void SmoothDestroyableBlock::OnHit()
 	{
-		StartTimer(BREAK_DELAY);
+		StartTimer(SETTINGS.BREAK_DELAY);
 	}
 
 	void SmoothDestroyableBlock::FinalAction()
 	{
 		--hitCount;
+		Emit();
 	}
 
 	void SmoothDestroyableBlock::EachTickAction(float deltaTime)
@@ -122,9 +123,9 @@ namespace ArkanoidGame
 		UpdateTimer(timeDelta);
 	}
 
-	bool StrongDestroyableBlock::GetCollision(std::shared_ptr<IColladiable> collidableObject) const
+	bool StrongDestroyableBlock::GetCollision(std::shared_ptr<Colladiable> collidableObject) const
 	{
-		if (isTimerStarted)
+		if (isTimerStarted_)
 		{
 			return false;
 		}
@@ -139,6 +140,7 @@ namespace ArkanoidGame
 	void StrongDestroyableBlock::FinalAction()
 	{
 		--hitCount_;
+		Emit();
 	}
 
 	void StrongDestroyableBlock::EachTickAction(float deltaTime)
@@ -151,7 +153,7 @@ namespace ArkanoidGame
 	{
 		if (hitCount_ > 2)
 		{
-			int red = rand() % 256;  
+			int red = rand() % 256;
 			int green = rand() % 256;
 			int blue = rand() % 256;
 
@@ -168,7 +170,7 @@ namespace ArkanoidGame
 	{
 		if (hitCount_ == 2)
 		{
-			StartTimer(BREAK_DELAY);
+			StartTimer(SETTINGS.BREAK_DELAY);
 		}
 		--hitCount_;
 		ChangeColorForHit();
@@ -191,9 +193,9 @@ namespace ArkanoidGame
 	{
 		UpdateTimer(timeDelta);
 	}
-	bool GlassDestroyableBlock::GetCollision(std::shared_ptr<IColladiable> collidableObject) const
+	bool GlassDestroyableBlock::GetCollision(std::shared_ptr<Colladiable> collidableObject) const
 	{
-		if (isTimerStarted)
+		if (isTimerStarted_)
 		{
 			return false;
 		}
@@ -205,6 +207,7 @@ namespace ArkanoidGame
 	void GlassDestroyableBlock::FinalAction()
 	{
 		--hitCount;
+		Emit();
 	}
 	void GlassDestroyableBlock::EachTickAction(float deltaTime)
 	{
@@ -215,7 +218,7 @@ namespace ArkanoidGame
 
 	void GlassDestroyableBlock::OnHit()
 	{
-		StartTimer(BREAK_DELAY);
+		StartTimer(SETTINGS.BREAK_DELAY);
 
 
 	}

@@ -9,7 +9,7 @@ namespace ArkanoidGame
 {
 	void GameStateGameWinData::Init()
 	{
-		assert(font.loadFromFile(RESOURCES_PATH + "Fonts/Roboto-Regular.ttf"));
+		assert(font.loadFromFile(SETTINGS.RESOURCES_PATH + "Fonts/Roboto-Regular.ttf"));
 
 		timeSinceGameWin = 0.f;
 
@@ -35,11 +35,11 @@ namespace ArkanoidGame
 		{
 			if (event.key.code == sf::Keyboard::Space)
 			{
-				Application::Instance().GetGame().SwitchStateTo(GameStateType::Playing);
+				Application::Instance().GetGame().StartGame();
 			}
 			else if (event.key.code == sf::Keyboard::Escape)
 			{
-				Application::Instance().GetGame().SwitchStateTo(GameStateType::MainMenu);
+				Application::Instance().GetGame().ExitGame();
 			}
 		}
 	}

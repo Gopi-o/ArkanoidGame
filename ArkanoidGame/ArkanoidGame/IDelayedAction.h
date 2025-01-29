@@ -1,26 +1,25 @@
 #pragma once
-#include <SFML/Graphics.hpp>
+#include "SFML/Graphics.hpp"
 #include <memory>
 
 namespace ArkanoidGame
 {
-	class IDelayedAtion
+	class IDelayedAction
 	{
 	protected:
-		bool isTimerStarted = false;
+		bool isTimerStarted_ = false;
 		float destroyTime_ = 0;
 		float currentTime_ = 0;
 
-		virtual void UpdateTimer(float deltaTime)
-		{
-			if (!isTimerStarted)
+		virtual void UpdateTimer(float deltaTime) {
+			if (!isTimerStarted_)
 				return;
 			currentTime_ -= deltaTime;
 			EachTickAction(deltaTime);
 			if (currentTime_ <= 0)
 			{
 				FinalAction();
-				isTimerStarted = false;
+				isTimerStarted_ = false;
 			}
 		}
 
@@ -31,7 +30,8 @@ namespace ArkanoidGame
 		{
 			destroyTime_ = destroyTime;
 			currentTime_ = destroyTime;
-			isTimerStarted = true;
+			isTimerStarted_ = true;
 		}
 	};
+
 }

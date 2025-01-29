@@ -7,7 +7,7 @@ namespace ArkanoidGame
 {
 	void GameStatePauseMenuData::Init()
 	{
-		assert(font.loadFromFile(RESOURCES_PATH + "Fonts/Roboto-Regular.ttf"));
+		assert(font.loadFromFile(SETTINGS.RESOURCES_PATH + "Fonts/Roboto-Regular.ttf"));
 
 		background.setFillColor(sf::Color(0, 0, 0, 128)); // Semi-transparent black
 
@@ -29,7 +29,7 @@ namespace ArkanoidGame
 		exitItem.text.setFont(font);
 		exitItem.text.setCharacterSize(24);
 		exitItem.onPressCallback = [](MenuItem&) {
-			Application::Instance().GetGame().SwitchStateTo(GameStateType::MainMenu);
+			Application::Instance().GetGame().ExitGame();
 			};
 
 		MenuItem pauseMenu;
