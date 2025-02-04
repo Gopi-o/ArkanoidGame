@@ -3,6 +3,7 @@
 #include "Sprite.h"
 #include <assert.h>
 #include "randomizer.h"
+#include "FastFireBallStrategy.h"
 
 namespace
 {
@@ -15,6 +16,7 @@ namespace ArkanoidGame
 	Ball::Ball(const sf::Vector2f& position)
 		: GameObject(SETTINGS.TEXTURES_PATH + TEXTURE_ID + ".png", position, SETTINGS.BALL_SIZE, SETTINGS.BALL_SIZE)
 	{
+		speed = SETTINGS.BALL_SPEED;
 		const float angle = 90;
 		const auto pi = std::acos(-1.f);
 		direction.x = std::cos(pi / 180.f * angle);
@@ -23,8 +25,14 @@ namespace ArkanoidGame
 
 	void Ball::Update(float timeDelta)
 	{
-		const auto pos = sprite.getPosition() + SETTINGS.BALL_SPEED * timeDelta * direction;
+		FastFireBallStrategy ballCommand(*this);
+		ballCommand.Execute(*this);
+
+		// ќстальна€ логика обновлени€ м€ча
+		const auto pos = sprite.getPosition() + speed * timeDelta * direction;
 		sprite.setPosition(pos);
+		//const auto pos = sprite.getPosition() + SETTINGS.BALL_SPEED * timeDelta * direction;
+		//sprite.setPosition(pos);
 
 		if (pos.x - SETTINGS.BALL_SIZE / 2.f <= 0 || pos.x + SETTINGS.BALL_SIZE / 2.f >= SETTINGS.SCREEN_WIDTH) {
 			direction.x *= -1;
@@ -34,6 +42,22 @@ namespace ArkanoidGame
 			direction.y *= -1;
 		}
 		Emit();
+	}
+
+
+	void Ball::SetSpeed(float speed)
+	{
+		this->speed = speed;
+	}
+
+	float Ball::GetSpeed() const
+	{
+		return speed;
+	}
+
+	void Ball::SetColor(const sf::Color& color)
+	{
+		sprite.setColor(color);
 	}
 
 	void Ball::InvertDirectionX()

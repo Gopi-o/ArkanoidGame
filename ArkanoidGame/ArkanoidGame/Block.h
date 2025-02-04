@@ -9,8 +9,9 @@ namespace ArkanoidGame
 {
 	class Block : public GameObject, public Colladiable, public IObservable
 	{
-	protected:
+	public:
 		void OnHit();
+	protected:
 		int hitCount = 1;
 	public:
 		Block(const sf::Vector2f& position, const sf::Color& color = sf::Color::Green);
@@ -22,8 +23,10 @@ namespace ArkanoidGame
 
 	class SmoothDestroyableBlock : public Block, public IDelayedAction
 	{
-	protected:
+	public:
 		void OnHit() override;
+
+	protected:
 		sf::Color color;
 
 	public:
@@ -52,8 +55,10 @@ namespace ArkanoidGame
 
 	class StrongDestroyableBlock : public Block, public IDelayedAction
 	{
+	public:
+		void OnHit() override;	
+
 	protected:
-		void OnHit() override;
 		sf::Color color;
 		int hitCount_ = 4;
 
@@ -72,8 +77,10 @@ namespace ArkanoidGame
 
 	class GlassDestroyableBlock : public Block, public IDelayedAction
 	{
-	protected:
+	public:
 		void OnHit() override;
+
+	protected:
 		sf::Color color;
 
 	public:

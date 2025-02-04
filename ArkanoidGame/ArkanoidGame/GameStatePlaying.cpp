@@ -3,8 +3,10 @@
 #include "Block.h"
 #include "Game.h"
 #include "Text.h"
-
-
+#include "fstream"
+#include "FastFireBallStrategy.h"
+#include "FragileBlockCommand.h"
+#include "BonusManager.h"
 #include <assert.h>
 #include <sstream>
 
@@ -39,6 +41,7 @@ namespace ArkanoidGame
 
 
 		scoreManager = std::make_shared<ScoreManager>();
+		LoadGame(SETTINGS.SAVE_GAME_CONFIG_PATH);
 		scoreManager->AddObserver(weak_from_this());
 
 		gameObjects.emplace_back(std::make_shared<Platform>(sf::Vector2f({ SETTINGS.SCREEN_WIDTH / 2.f, SETTINGS.SCREEN_HEIGHT - SETTINGS.PLATFORM_HEIGHT / 2.f })));
@@ -72,9 +75,12 @@ namespace ArkanoidGame
 		std::for_each(gameObjects.begin(), gameObjects.end(), updateFunctor);
 		std::for_each(blocks.begin(), blocks.end(), updateFunctor);
 
+		BonusManager::Update(timeDelta);
+		UpdateBonuses(timeDelta);
+		HandleBonusCollisions();
 
-		std::shared_ptr <Platform> platform = std::dynamic_pointer_cast<Platform>(gameObjects[0]);
 		std::shared_ptr<Ball> ball = std::dynamic_pointer_cast<Ball>(gameObjects[1]);
+		std::shared_ptr <Platform> platform = std::dynamic_pointer_cast<Platform>(gameObjects[0]);
 
 		auto isCollision = platform->CheckCollision(ball);
 
@@ -104,6 +110,19 @@ namespace ArkanoidGame
 				}),
 			blocks.end()
 		);
+		//if (fragileBlocksActive) {
+		//	for (auto& block : blocks) {
+		//		if (block->GetCollision(ball)) {
+		//			fragileBlockCommand->Execute(*block); // Выполняем команду для блока
+		//		}
+		//	}
+
+		//	// Уменьшаем оставшееся время действия бонуса
+		//	fragileDuration -= timeDelta;
+		//	if (fragileDuration <= 0) {
+		//		DeactivateFragileBlocks(); // Деактивируем позже
+		//	}
+		//}
 		if (needInverseDirX) {
 			ball->InvertDirectionX();
 		}
@@ -121,6 +140,7 @@ namespace ArkanoidGame
 		// Draw game objects
 		std::for_each(gameObjects.begin(), gameObjects.end(), drawFunc);
 		std::for_each(blocks.begin(), blocks.end(), drawFunc);
+		std::for_each(bonuses.begin(), bonuses.end(), drawFunc);
 
 		
 		scoreText.setOrigin(GetTextOrigin(scoreText, { 0.f, 0.f }));
@@ -202,11 +222,49 @@ namespace ArkanoidGame
 		}
 	}
 
+	Memento GameStatePlayingData::CreateMemento() const
+	{
+		return Memento(highScore, currentLevel);
+	}
+
+	void GameStatePlayingData::RestoreFromMemento(const Memento& memento)
+	{
+		highScore = memento.getScore();
+		currentLevel = memento.GetLevel();
+
+	}
+
+	void GameStatePlayingData::SaveGame(const std::string& filename)
+	{
+		Memento memento = CreateMemento();
+		std::ofstream ofs(filename);
+		if (ofs.is_open()) {
+			ofs << memento.getScore() << " " << memento.GetLevel() << std::endl;
+			ofs.close();
+		}
+	}
+
+	void GameStatePlayingData::LoadGame(const std::string& filename)
+	{
+		std::ifstream ifs(filename);
+		if (ifs.is_open()) {
+			int fileScore, fileCurrentlevel;
+			ifs >> fileScore >> fileCurrentlevel;
+			RestoreFromMemento(Memento(fileScore, fileCurrentlevel));
+		}
+	}
+
+
+
 
 	void GameStatePlayingData::Notify(std::shared_ptr<IObservable> observable)
 	{
 		if (auto block = std::dynamic_pointer_cast<Block>(observable); block) {
 			--unbreackableBlocksCount;
+
+			
+			CreateBonus(block->GetPosition());
+
 			if (dynamic_cast<StrongDestroyableBlock*>(block.get())) {
 				scoreManager->AddScore(SETTINGS.STRONG_BLOCK_POINTS);
 			}
@@ -227,9 +285,107 @@ namespace ArkanoidGame
 		{
 			if (ball->GetPosition().y > gameObjects.front()->GetRect().top) {
 				score = scoreManager->GetTotalScore();
-				Application::Instance().GetGame().SetScore(score);
+				
+				if (score >= highScore) {
+					highScore = score;
+				}
+				Application::Instance().GetGame().SetScore(highScore);
+				SaveGame(SETTINGS.SAVE_GAME_CONFIG_PATH);
 				gameOverSound.play();
 				Application::Instance().GetGame().LooseGame();
+			}
+		}
+	}
+
+	void GameStatePlayingData::CreateBonus(const sf::Vector2f& position)
+	{
+		if (rand() % 100 < 80)
+		{
+
+			BonusType type = static_cast<BonusType>(rand() % 1); 
+			sf::Color color; 
+
+			switch (type)
+			{
+			case BonusType::FireBall:
+				color = sf::Color::Red; 
+				break;
+			case BonusType::FragileBlocks:
+				color = sf::Color::Blue; 
+				break;
+			case BonusType::IncreasePlatformSize:
+				color = sf::Color::Green; 
+				break;
+			case BonusType::IncreasePlatformSpeed:
+				color = sf::Color::Cyan; 
+				break;
+			case BonusType::BounceBallRandomDirection:
+				color = sf::Color::Magenta;
+				break;
+			default:
+				color = sf::Color::White; 
+				break;
+			}
+
+			sf::Vector2f bonusPosition = position;
+			bonusPosition.y += SETTINGS.BLOCK_HEIGHT;
+
+			auto bonus = std::make_shared<Bonus>(bonusPosition, color, type);
+			bonuses.push_back(bonus);
+		}
+	}
+
+	void GameStatePlayingData::UpdateBonuses(float timeDelta)
+	{
+		for (auto& bonus : bonuses)
+		{
+			bonus->Update(timeDelta);
+		}
+
+		// Удаляем неактивные бонусы
+		bonuses.erase(
+			std::remove_if(bonuses.begin(), bonuses.end(),
+				[](const std::shared_ptr<Bonus>& bonus) {
+					return !bonus->IsActive();
+				}),
+			bonuses.end()
+		);
+	}
+
+	void GameStatePlayingData::HandleBonusCollisions()
+	{
+		auto platform = std::dynamic_pointer_cast<Platform>(gameObjects[0]);
+		auto ball = std::dynamic_pointer_cast<Ball>(gameObjects[1]);
+		if (!platform)
+		{
+			return;
+		}
+
+		for (auto& bonus : bonuses)
+		{
+			if (bonus->CheckCollision(platform))
+			{
+				bonus->OnHit(); // Деактивируем бонус
+				// Активируем эффект бонуса (в зависимости от типа)
+				switch (bonus->GetType())
+				{
+				case BonusType::FireBall: // Новый бонус
+					
+					BonusManager::ActivateFastBallBonus(5.0f);
+					break;
+				case BonusType::FragileBlocks:
+					BonusManager::ActivateFragileBonus(10.0f); 
+					break;
+				case BonusType::IncreasePlatformSize:
+					BonusManager::ActivateSizeBonus(10.0f);
+					break;
+				case BonusType::IncreasePlatformSpeed:
+					BonusManager::ActivateSpeedBonus(10.0f);
+					break;
+				case BonusType::BounceBallRandomDirection:
+					BonusManager::ActivateBounceDirectionBonus(10.0f);
+					break;
+				}
 			}
 		}
 	}

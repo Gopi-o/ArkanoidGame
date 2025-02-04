@@ -3,6 +3,7 @@
 #include "GameObject.h"
 #include "Collidable.h"
 #include "IObserver.h"
+#include <memory>
 
 namespace ArkanoidGame
 {
@@ -12,6 +13,11 @@ namespace ArkanoidGame
 		Ball(const sf::Vector2f& position);
 		~Ball() = default;
 		void Update(float timeDelta) override;
+
+
+		void SetSpeed(float speed);
+		float GetSpeed() const;
+		void SetColor(const sf::Color& color);
 
 		void InvertDirectionX();
 		void InvertDirectionY();
@@ -23,6 +29,7 @@ namespace ArkanoidGame
 		void OnHit();
 		sf::Vector2f direction;
 		float lastAngle = 90;
+		float speed; 
 	};
 }
 

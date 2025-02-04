@@ -1,7 +1,7 @@
 #include "Block.h"
 #include "Sprite.h"
 #include "GameSettings.h"
-
+#include "BonusManager.h"
 #include <assert.h>
 
 namespace
@@ -78,7 +78,15 @@ namespace ArkanoidGame
 
 	void SmoothDestroyableBlock::OnHit()
 	{
-		StartTimer(SETTINGS.BREAK_DELAY);
+		if (BonusManager::IsFragileBonusActive()) {
+			hitCount = 0;
+			StartTimer(SETTINGS.BREAK_DELAY);
+		}
+		else {
+
+			StartTimer(SETTINGS.BREAK_DELAY);
+		}
+		
 	}
 
 	void SmoothDestroyableBlock::FinalAction()
@@ -105,6 +113,9 @@ namespace ArkanoidGame
 
 	void UnBreakableBlock::OnHit()
 	{
+		if (BonusManager::IsFragileBonusActive()) {
+			hitCount = 0;
+		}
 	}
 
 
@@ -139,7 +150,7 @@ namespace ArkanoidGame
 
 	void StrongDestroyableBlock::FinalAction()
 	{
-		--hitCount_;
+		hitCount_ -= 2;
 		Emit();
 	}
 
@@ -168,12 +179,23 @@ namespace ArkanoidGame
 
 	void StrongDestroyableBlock::OnHit()
 	{
-		if (hitCount_ == 2)
-		{
+		if (BonusManager::IsFragileBonusActive()) {
+			hitCount_ = 0;
 			StartTimer(SETTINGS.BREAK_DELAY);
 		}
-		--hitCount_;
-		ChangeColorForHit();
+		else {
+
+			if (hitCount_ == 2)
+			{
+				StartTimer(SETTINGS.BREAK_DELAY);
+			}
+			else {
+
+				--hitCount_;
+				ChangeColorForHit();
+			}
+		}
+		
 	}
 
 	bool StrongDestroyableBlock::IsBroken()

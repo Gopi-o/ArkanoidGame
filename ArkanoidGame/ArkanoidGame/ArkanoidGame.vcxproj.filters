@@ -70,6 +70,24 @@
     <ClCompile Include="ScoreManager.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="Bonus.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="FastFireBallStrategy.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="BonusManager.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatformSizeCommand.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatformSpeedCommand.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatformBounceCommand.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h">
@@ -101,7 +119,6 @@
     <ClInclude Include="Text.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="GameState.h" />
-    <ClInclude Include="Ball.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GameStateData.h" />
@@ -124,5 +141,23 @@
       <Filter>Sources</Filter>
     </ClInclude>
     <ClInclude Include="ScoreManager.h" />
+    <ClInclude Include="Memento.h" />
+    <ClInclude Include="Bonus.h" />
+    <ClInclude Include="Ball.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
+    <ClInclude Include="FastFireBallStrategy.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
+    <ClInclude Include="ICommand.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
+    <ClInclude Include="FragileBlockCommand.h">
+      <Filter>Sources</Filter>
+    </ClInclude>
+    <ClInclude Include="BonusManager.h" />
+    <ClInclude Include="PlatformSizeCommand.h" />
+    <ClInclude Include="PlatformSpeedCommand.h" />
+    <ClInclude Include="PlatformBounceCommand.h" />
   </ItemGroup>
 </Project>

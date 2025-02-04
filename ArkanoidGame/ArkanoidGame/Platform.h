@@ -14,7 +14,18 @@ namespace ArkanoidGame
 		bool GetCollision(std::shared_ptr<Colladiable> collidable) const override;
 		void OnHit() override {}
 		bool CheckCollision(std::shared_ptr<Colladiable> collidable) override;
+
+		void SetSize(float width);
+		void SetSpeed(float speed);
+		void SetBounceDirection(float angle);
+
+		float GetSpeed() const;
+		float GetWidth() const;
+
 	private:
 		void Move(float speed);
+
+		float platformSpeed;
+		float Vwidth;
 	};
 }

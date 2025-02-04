@@ -4,9 +4,12 @@
 #include "GameStateData.h"
 #include "Platform.h"
 #include "Ball.h"
+#include "Bonus.h"
+#include "ICommand.h"
 #include "LevelLoader.h"
 #include "BlockFactory.h"
 #include "ScoreManager.h"
+#include "Memento.h"
 #include "IObserver.h"
 
 #include <unordered_map>
@@ -26,12 +29,26 @@ namespace ArkanoidGame
 		void Draw(sf::RenderWindow& window) override;
 		void LoadNextLevel();
 		void Notify(std::shared_ptr<IObservable> observable) override;
-		int GetScore() const { return score; }
+		void CreateBonus(const sf::Vector2f& position); 
+		void UpdateBonuses(float timeDelta); 
+		void HandleBonusCollisions();
+		int GetScore() const { return highScore; }
+
+		void ActivateFragileBlocks(float duration);
+		void DeactivateFragileBlocks();
+
+
 
 	private:
 		void createBlocks();
 		void GetBallInverse(const sf::Vector2f& ballPos, const sf::FloatRect& blockRect, bool& needInverseDirX,
 			bool& needInverseDirY);
+
+		Memento CreateMemento() const;
+		void RestoreFromMemento(const Memento& memento);
+
+		void SaveGame(const std::string& filename);
+		void LoadGame(const std::string& filename);
 
 		// Resources
 		sf::Texture appleTexture;
@@ -43,6 +60,7 @@ namespace ArkanoidGame
 		// Game data
 		std::vector<std::shared_ptr<GameObject>> gameObjects;
 		std::vector<std::shared_ptr<Block>> blocks;
+		std::vector<std::shared_ptr<Bonus>> bonuses;
 		std::shared_ptr<ScoreManager> scoreManager;
 
 
@@ -63,6 +81,12 @@ namespace ArkanoidGame
 		int currentLevel = 0;
 
 		int score = 0;
+		int highScore = 0;
+
+		//BlockCommand
+		std::shared_ptr<ICommand> fragileBlockCommand; 
+		bool fragileBlocksActive = false; 
+		float fragileDuration = 0.0f;
 
 	};
 }

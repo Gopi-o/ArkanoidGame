@@ -21,6 +21,7 @@ namespace ArkanoidGame
 		const std::string FONTS_PATH = RESOURCES_PATH + "Fonts/";
 		const std::string SOUNDS_PATH = RESOURCES_PATH + "Sounds/";
 		const std::string LEVELS_CONFIG_PATH = RESOURCES_PATH + "levels.config";
+		const std::string SAVE_GAME_CONFIG_PATH = RESOURCES_PATH + "SaveGame.config";
 
 		// Game settings constants
 		const float ACCELERATION = 10.f;
@@ -35,16 +36,24 @@ namespace ArkanoidGame
 
 		const unsigned int BALL_SIZE = 20;
 		const unsigned int BALL_SPEED = 400;
+		const unsigned int BALL_BONUS_SPEED = 500;
 
 		const unsigned int PLATFORM_WIDTH = 120;
 		const unsigned int PLATFORM_HEIGHT = 20;
 		const float PLATFORM_SPEED = 200.f;
+		const unsigned int PLATFORM_BONUS_WIDTH = 180;
+		const float PLATFORM_BONUS_SPEED = 360.f;
+
+
 
 		const unsigned int BLOCKS_COUNT_ROWS = 4;
 		const unsigned int BLOCKS_COUNT_IN_ROW = 15;
 		const unsigned int BLOCK_SHIFT = 5;
 		const unsigned int BLOCK_WIDTH = (SCREEN_WIDTH - (BLOCKS_COUNT_IN_ROW + 1) * BLOCK_SHIFT) / BLOCKS_COUNT_IN_ROW;
 		const unsigned int BLOCK_HEIGHT = 20;
+
+		const unsigned int BONUS_SIZE = 35;
+		const unsigned int BONUS_FALL_SPEED = 150;
 
 		const int MAX_RECORDS_TABLE_SIZE = 5;
 		const char* PLAYER_NAME = "Player";
